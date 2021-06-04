@@ -1,0 +1,477 @@
+@model Triton.Operations.Models.QuotationViewModel
+@using Microsoft.Extensions.Configuration
+@{
+    ViewData["Title"] = "View quote - " + Model.VendorQuoteModel.Quote.QuoteNo;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Header"] = "View Quote - ";
+    ViewData["HeaderBold"] = Model.VendorQuoteModel.Quote.QuoteNo;
+    ViewData["Description"] = $"Created {Model.VendorQuoteModel.Quote.DateQuote.ToString("ddd, dd MMMM yyyy")}" + $"{ (Model.VendorQuoteModel.Quote.QuoteExpiryDateStamp.HasValue ? $", expires {Model.VendorQuoteModel.Quote.QuoteExpiryDateStamp.Value.ToString("ddd, dd MMMM yyyy")}" : "")}";
+}
+
+@inject IConfiguration Configuration
+@{
+    var template = $"{Configuration.GetSection("URL").GetSection("template").Value}";
+}
+
+@functions {
+
+    private void RenderDeliveryInformation(string address, string text, string icon)
+    {
+        <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center mr-2">
+                <span class="btn btn-icon btn-soft-danger rounded-circle">
+                    <span class="btn-icon__inner"><i class="@icon"></i></span>
+                </span>
+                <div class="ml-3">
+                    <h5 class="text-hover-primary mb-0">@(address == null ? "N/A" : address)</h5>
+                    <span class="font-size-sm text-body">@text</span>
+                </div>
+            </div>
+        </div>
+    }
+    private void RenderBlock(string label, string value, string icon, string color)
+    {
+        <div class="card card-frame transition-3d-hover mb-3">
+            <!-- Card -->
+            <div class="card-body">
+                <div class="media">
+                    <span class="btn btn-lg btn-icon btn-soft-@color rounded-circle mr-4">
+                        <span class="fas @icon btn-icon__inner"></span>
+                    </span>
+                    <div class="media-body px-4">
+                        <h4 class="h6 text-dark mb-1">@value</h4>
+                        <small class="d-block text-muted">@label</small>
+                    </div>
+                </div>
+            </div>
+            <!-- End Card -->
+        </div>
+    }
+
+    private void RenderDocuments(string label, string href, string id)
+    {
+        <li class="list-group-item py-3">
+            <div class="media">
+                <div class="mt-1 mr-3">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-sm avatar-soft-secondary avatar-circle mr-2">
+                            <span class="avatar-initials">@label.Substring(0, 1)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="media-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">@label</h5>
+                            <span class="d-block font-size-sm">Quotation</span>
+                        </div>
+
+                        <div class="col-auto">
+                            <a class="btn btn-sm btn-soft-primary" href="@href" title="" target="_blank">
+                                View <i class="tio-open-in-new ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- End Row -->
+                </div>
+            </div>
+        </li>
+    }
+
+    private void RenderLabel(string label, string value, string icon)
+    {
+        <div class="d-flex align-items-start mb-4">
+            <span class="btn btn-icon btn-soft-danger rounded-circle">
+                <span class="btn-icon__inner"><i class="fad @icon"></i></span>
+            </span>
+
+            <div class="ml-3">
+                <span class="d-block text-dark">@label</span>
+                <small class="d-block text-secondary">@value</small>
+            </div>
+        </div>
+    }
+
+    private void DisableDocuments(string label)
+    {
+        <li class="list-group-item py-3">
+            <div class="media">
+                <div class="mt-1 mr-3">
+                    <div class="media align-items-center">
+                        <div class="avatar avatar-sm avatar-soft-secondary avatar-circle mr-2">
+                            <span class="avatar-initials">@label.Substring(0, 1)</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="media-body">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h5 class="mb-0">@label</h5>
+                            <span class="d-block font-size-sm">Waybill</span>
+                        </div>
+
+                        <div class="col-auto text-danger">
+                            <span class="badge badge-soft-danger p-1">
+                                <i class="fal fa-upload"></i> Awaiting upload
+                            </span>
+                        </div>
+                    </div>
+                    <!-- End Row -->
+                </div>
+            </div>
+        </li>
+
+    }
+}
+
+
+<main id="content" role="main" class="main">
+    <div class="content container-fluid">
+        <div class="page-header">
+            <div class="row align-items-end">
+                <div class="col-sm mb-2 mb-sm-0">
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb breadcrumb-no-gutter">
+                            <li class="breadcrumb-item"><a class="breadcrumb-link" href="javascript:;">Quotation</a></li>
+                            <li class="breadcrumb-item"><a class="breadcrumb-link" href="javascript:;">Overview</a></li>
+                        </ol>
+                    </nav>
+
+                    <h1 class="page-header-title">Quotation</h1>
+                </div>
+            </div>
+            <!-- End Row -->
+        </div>
+        <!-- End Row -->
+        <div class="row">
+            <div class="col-lg-9 mb-5 mb-lg-0">
+                <!-- Card -->
+                <div class="card card-lg">
+                    <!-- Body -->
+                    <div class="card-body">
+                        @if (ViewData["Message"] != null)
+                        {
+                            <div>
+                                @Html.Raw(ViewData["Message"])
+                            </div>
+                        }
+                        <div class="embed-responsive embed-responsive-1by1">
+                            <iframe class="embed-responsive-item" src="@Model.ReportUrl"></iframe>
+                        </div>
+
+                    </div>
+                    <!-- End Body -->
+                </div>
+                <!-- End Card -->
+                <!-- Sticky Block End Point -->
+                <div id="stickyBlockEndPoint"></div>
+            </div>
+
+            <div id="stickyBlockStartPoint" class="col-lg-3" style="">
+                <div class="js-sticky-block" data-hs-sticky-block-options="{
+                   &quot;parentSelector&quot;: &quot;#stickyBlockStartPoint&quot;,
+                   &quot;breakpoint&quot;: &quot;lg&quot;,
+                   &quot;startPoint&quot;: &quot;#stickyBlockStartPoint&quot;,
+                   &quot;endPoint&quot;: &quot;#stickyBlockEndPoint&quot;,
+                   &quot;stickyOffsetTop&quot;: 20
+                 }" style="">
+
+                    <button class="btn btn-block btn-primary mb-3" data-toggle="modal" data-target="#exampleModalCenter">
+                        <i class="fal fa-paper-plane mr-1"></i> Send Proposal
+                    </button>
+
+                    <!-- End Row -->
+
+                    <hr class="my-4">
+                    <div class="card h-100">
+                        <!-- Header -->
+                        <div class="card-header">
+                            <h5 class="card-header-title">Information</h5>
+                        </div>
+                        <!-- End Header -->
+                        <!-- Body -->
+                        <div class="card-body">
+                            <ul class="list-unstyled list-unstyled-py-4 mb-0">
+                                <!-- List Item -->
+                                <li>
+                                    <div class="d-flex align-items-center">
+                                        <a class="d-flex align-items-center mr-2" href="#">
+                                            <div class="ml-3">
+                                                <h5 class="text-hover-primary mb-0">Sender</h5>
+                                            </div>
+                                        </a>
+                                        <div class="ml-auto">
+                                            <!-- Checkbox -->
+                                            <span class="font-size-sm text-body">@Model.VendorQuoteModel.Quote.SenName</span>
+                                            <!-- End Checkbox -->
+                                        </div>
+                                    </div>
+                                </li>
+                                <!-- End List Item -->
+                                <!-- List Item -->
+                                <li>
+                                    <div class="d-flex align-items-center">
+                                        <a class="d-flex align-items-center mr-2" href="#">
+                                            <div class="ml-3">
+                                                <h5 class="text-hover-primary mb-0">Receiver</h5>
+                                            </div>
+                                        </a>
+                                        <div class="ml-auto">
+                                            <!-- Checkbox -->
+                                            <span class="font-size-sm text-body">@Model.VendorQuoteModel.Quote.RecName</span>
+                                            <!-- End Checkbox -->
+                                        </div>
+                                    </div>
+                                </li>
+                                <!-- End List Item -->
+                                <!-- List Item -->
+                                <li>
+                                    <div class="d-flex align-items-center">
+                                        <a class="d-flex align-items-center mr-2" href="#">
+                                            <div class="ml-3">
+                                                <h5 class="text-hover-primary mb-0">Total Qty</h5>
+                                            </div>
+                                        </a>
+                                        <div class="ml-auto">
+                                            <!-- Checkbox -->
+                                            <span class="font-size-sm text-body">@Model.VendorQuoteModel.Quote.TotalQty</span>
+                                            <!-- End Checkbox -->
+                                        </div>
+                                    </div>
+                                </li>
+                                <!-- End List Item -->
+                                <!-- List Item -->
+                                <li>
+                                    <div class="d-flex align-items-center">
+                                        <a class="d-flex align-items-center mr-2" href="#">
+                                            <div class="ml-3">
+                                                <h5 class="text-hover-primary mb-0">Total Mass</h5>
+                                            </div>
+                                        </a>
+                                        <div class="ml-auto">
+                                            <!-- Checkbox -->
+                                            <span class="font-size-sm text-body">@Model.VendorQuoteModel.Quote.TotalMass</span>
+                                            <!-- End Checkbox -->
+                                        </div>
+                                    </div>
+                                </li>
+                                <!-- End List Item -->
+
+                                <li>
+                                    <div class="d-flex align-items-center">
+                                        <a class="d-flex align-items-center mr-2" href="#">
+                                            <div class="ml-3">
+                                                <h5 class="text-hover-primary mb-0">Total Volume</h5>
+                                            </div>
+                                        </a>
+                                        <div class="ml-auto">
+                                            <!-- Checkbox -->
+                                            <span class="font-size-sm text-body">@Model.VendorQuoteModel.Quote.TotalVolume</span>
+                                            <!-- End Checkbox -->
+                                        </div>
+                                    </div>
+                                </li>
+
+                                <li>
+                                    <div class="d-flex align-items-center">
+                                        <a class="d-flex align-items-center mr-2" href="#">
+                                            <div class="ml-3">
+                                                <h5 class="text-hover-primary mb-0">Total Value</h5>
+                                            </div>
+                                        </a>
+                                        <div class="ml-auto">
+                                            <!-- Checkbox -->
+                                            <span class="font-size-sm text-body">@Model.VendorQuoteModel.Quote.TotalValue</span>
+                                            <!-- End Checkbox -->
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- End Body -->
+                    </div>
+                    <!-- Form Group -->
+                    <hr class="my-4" />
+                    <label class="label">Senders Address</label>
+                    <input type="text" id="Address" class="form-control" placeholder="Address" autocomplete="on" />
+                    <label class="label">Senders latitude</label>
+                    <input type="text" class="form-control" name="latitude" id="lat" readonly disabled/>
+                    <label class="label">Senders longitude</label>
+                    <input type="text" class="form-control" name="longitude" id="lon" readonly disabled/>
+                    <label class="label">Senders Plus Code</label>
+                    <input type="text" class="form-control" name="longitude" id="PlusCode" readonly disabled/>
+
+                    <hr class="my-4" />
+                    <label class="label">Receivers Address</label>
+                    <input type="text" id="RecAddress" class="form-control" placeholder="Address" autocomplete="on" />
+                    <label class="label">Receivers latitude</label>
+                    <input type="text" class="form-control" name="Reclatitude" id="Reclat" readonly disabled/>
+                    <label class="label">Receivers longitude</label>
+                    <input type="text" class="form-control" name="Reclongitude" id="Reclon" readonly disabled/>
+                    <label class="label">Receivers Plus Code</label>
+                    <input type="text" class="form-control" name="Reclongitude" id="RecPlusCode" readonly disabled/>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Content -->
+    <div id="exampleModalCenter" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog " role="document">
+            <form method="post" asp-action="EmailQuote" asp-controller="Quotation" class="js-validate">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalCenterTitle">Email proposal</h5>
+                        <button type="button" class="btn btn-xs btn-icon btn-ghost-secondary" data-dismiss="modal" aria-label="Close">
+                            <i class="tio-clear tio-lg"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Form Group -->
+                        <div class="row form-group">
+                            <label for="txtEmail" class="col-sm-3 col-form-label input-label">Email address</label>
+
+                            <div class="col-md-12 js-form-message">
+                                <input type="email" name="EmailAddress" class="form-control emailValidation" id="txtEmail" placeholder="Enter and email address" aria-label="Enter an email address" required data-msg="Please enter a email address" />
+                            </div>
+                        </div>
+                        <!-- End Form Group -->
+                        <input type="hidden" name="quoteId" value="@Model.VendorQuoteModel.Quote.QuoteID" />
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">Send</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+</main>
+
+
+@section scripts{
+    <script>
+        $(document).on('ready', function () {
+            // INITIALIZATION OF FORM VALIDATION
+            // =======================================================
+            $('.js-validate').each(function () {
+                $.HSCore.components.HSValidation.init($(this));
+            });
+        });
+
+    </script>
+    <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&key=AIzaSyBter9Tb9YQMPbNN7DJAqJWo5lFx00uALg"></script>
+    <script type="text/javascript">
+        google.maps.event.addDomListener(window, 'load', function () {
+            var places = new google.maps.places.Autocomplete(document.getElementById('Address'));
+            var Recplaces = new google.maps.places.Autocomplete(document.getElementById('RecAddress'));
+            places.setComponentRestrictions({
+                country: ["ZA"]
+            });
+
+            Recplaces.setComponentRestrictions({
+                country: ["ZA"]
+            });
+            getLatLong(places);
+            getRecLatLong(Recplaces);
+        });
+
+        function placeLastOfFocus() {
+            if (!document.getElementById('Address').value.trim()) {
+
+                $("#Address").val('');
+                $("#lat").val('');
+                $("#lon").val('');
+                return;
+            }
+            if (!document.getElementById('RecAddress').value.trim()) {
+
+                $("#RecAddress").val('');
+                $("#Reclat").val('');
+                $("#Reclon").val('');
+                return;
+            }
+            //doGeocode();
+            var places = new google.maps.places.Autocomplete(document.getElementById('Address'));
+            var Recplaces = new google.maps.places.Autocomplete(document.getElementById('RecAddress'));
+            getLatLong(places);
+            getRecLatLong(Recplaces);
+        }
+        function doGeocode() {
+            var addr = document.getElementById("Address");
+            var Recaddr = document.getElementById("RecAddress");
+            // Get geocoder instance
+            var geocoder = new google.maps.Geocoder();
+            var geocoder2 = new google.maps.Geocoder();
+
+            // Geocode the address
+            geocoder.geocode({ 'address': addr.value }, function (results, status)
+            {
+                if (status === google.maps.GeocoderStatus.OK && results.length > 0)
+                {
+
+                    // set it ot he correct, formatted address if it's vadlid
+                    addr.value = results[0].formatted_address;;
+                    alert("valid");
+                    // show an error if it's not
+                } else alert("Invalid address");
+            });
+
+            geocoder2.geocode({ 'address': Recaddr.value }, function (results, status)
+            {
+                if (status === google.maps.GeocoderStatus.OK && results.length > 0)
+                {
+
+                    // set it ot he correct, formatted address if it's vadlid
+                    Recaddr.value = results[0].formatted_address;;
+                    alert("valid");
+                    // show an error if it's not
+                } else alert("Invalid address");
+            });
+        };
+        function getLatLong(places) {
+            google.maps.event.addListener(places, 'place_changed', function ()
+            {
+                $("#Address").val('');
+                $("#latitude").val('');
+                $("#longitude").val('');
+                var place = places.getPlace();
+                var address = place.formatted_address;
+                var latitude = place.geometry.location.lat();
+                var longitude = place.geometry.location.lng();
+                var components_by_type = {};
+                for (var i = 0; i < place.address_components.length; i++) {
+                    var c = place.address_components[i];
+                    components_by_type[c.types[0]] = c;
+                }
+
+                console.log(components_by_type['street_number'].short_name + " " + components_by_type['route'].long_name);
+                console.log(components_by_type['sublocality_level_1'].long_name);
+                console.log(components_by_type['locality'].long_name);
+                console.log(components_by_type['administrative_area_level_2'].long_name);
+                console.log(components_by_type['postal_code'].long_name);
+                console.log(place);
+                $("#Address").val(address);
+                $("#lat").val(latitude);
+                $("#lon").val(longitude);
+                $("#PlusCode").val(place.plus_code.global_code);
+            });
+        }
+        function getRecLatLong(places) {
+            google.maps.event.addListener(places, 'place_changed', function () {
+                $("#RecAddress").val('');
+                $("#Reclat").val('');
+                $("#Reclon").val('');
+                var place = places.getPlace();
+                var address = place.formatted_address;
+                var latitude = place.geometry.location.lat();
+                var longitude = place.geometry.location.lng();
+                $("#RecAddress").val(address);
+                $("#Reclat").val(latitude);
+                $("#Reclon").val(longitude);
+                $("#RecPlusCode").val(place.plus_code.global_code);
+            });
+        }
+    </script>
+}
